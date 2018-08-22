@@ -1,0 +1,145 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    lintOptions {
+        abortOnError false
+    }
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 0
+        versionName new File("$projectDir/VERSION").text.trim()
+
+        buildConfigField "String", "FBNETWORK_KEY", "\"\""
+        buildConfigField "String", "FBNETWORK_SECRET", "\"\""
+
+        multiDexEnabled true
+    }
+
+    sourceSets {
+        main.aidl.srcDirs = ['src/main/java']
+        main.java.srcDirs = ['src/main/java']
+        main.res.srcDirs = ['src/main/res']
+        main.assets.srcDirs = ['src/main/assets']
+        main.jniLibs.srcDirs = ['src/main/libs']
+        main.jni.srcDirs = []
+    }
+
+    signingConfigs {
+        release {
+			storeFile file(RELEASE_STORE_FILE)
+			storePassword RELEASE_STORE_PASSWORD
+			keyAlias RELEASE_KEY_ALIAS
+			keyPassword RELEASE_KEY_PASSWORD
+//            keyAlias 'niuren'
+//            storePassword 'niuren*2015'
+//            keyPassword 'niuren*2015'
+//            storeFile file('../../niuren.keystore.jks')
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.cfg'
+            signingConfig signingConfigs.release
+//            buildConfigField "String", "FBNETWORK_KEY", "${FBREADER_ORG_FBNETWORK_KEY}"
+//            buildConfigField "String", "FBNETWORK_SECRET", "${FBREADER_ORG_FBNETWORK_SECRET}"
+        }
+    }
+
+//	applicationVariants.all { variant ->
+//		def generateHelpTask = project.tasks.create "generateHelp${variant.name.capitalize()}", Exec
+//		generateHelpTask.commandLine('src/main/help/generate.py', 'src/main/help/proto', 'src/main/help/html', variant.outputs[0].processResources.assetsDir.path + '/data/intro')
+//		variant.mergeResources.dependsOn(generateHelpTask)
+//	}
+}
+
+android {
+    flavorDimensions 'abi'
+
+    productFlavors {
+        fat {
+            dimension 'abi'
+            ndk {
+                abiFilters 'x86', 'armeabi-v7a'
+                versionCode 0
+            }
+        }
+        armv7a {
+            dimension 'abi'
+            ndk {
+                abiFilter 'armeabi-v7a'
+                versionCode 2
+            }
+        }
+        x86 {
+            dimension 'abi'
+            ndk {
+                abiFilter 'x86'
+                versionCode 3
+            }
+        }
+    }
+
+    task ndkBuild(type: Exec) {
+        def ndkDir = project.android.ndkDirectory
+        commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn ndkBuild
+    }
+
+    clean {
+        delete 'src/main/obj'
+        delete 'src/main/libs'
+    }
+}
+
+dependencies {
+
+    compile files('libs/httpclient-4.2.2.jar')
+    compile files('libs/httpcore-4.4.10.jar')
+    compile files('libs/nanohttpd-2.0.5.jar')
+    compile files('libs/httpmime-4.2.5.jar')
+    compile files('libs/pdfparse.jar')
+    compile project(':api')
+    compile project(':util')
+    compile project(':common')
+    compile project(':resources')
+    compile project(':text-formats')
+    compile project(':zip-amse')
+    compile project(':third-party:AmbilWarna')
+    compile project(':third-party:android-filechooser')
+    compile project(':third-party:drag-sort-listview')
+    compile project(':third-party:SuperToasts')
+}
+
+android.applicationVariants.all { variant ->
+    def abiVersion = variant.productFlavors.get(0).versionCode
+
+    def baseCode = 0
+    def version = new File("$projectDir/VERSION").text.trim()
+    if (version.matches('\\d*\\.\\d* beta \\d*')) {
+        def parts = version.split('[ .]')
+        baseCode = parts[0].toInteger() * 1000000 + parts[1].toInteger() * 10000 - 5000 + parts[3].toInteger() * 100
+    } else if (version.matches('\\d*\\.\\d* rc \\d*')) {
+        def parts = version.split('[ .]')
+        baseCode = parts[0].toInteger() * 1000000 + parts[1].toInteger() * 10000 - 2500 + parts[3].toInteger() * 100
+    } else if (version.matches('\\d*\\.\\d*')) {
+        def parts = version.split('\\.')
+        baseCode = parts[0].toInteger() * 1000000 + parts[1].toInteger() * 10000
+    } else if (version.matches('\\d*\\.\\d*\\.\\d*')) {
+        def parts = version.split('\\.')
+        baseCode = parts[0].toInteger() * 1000000 + parts[1].toInteger() * 10000 + parts[2].toInteger() * 100
+    } else {
+        throw new IllegalArgumentException('Unsupported version format: ' + version)
+    }
+
+    variant.mergedFlavor.versionCode = baseCode + 10 + abiVersion
+}

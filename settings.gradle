@@ -1,0 +1,5 @@
+include ':util', ':api', ':app', ':text-formats', ':zip-amse', ':common', ':resources'
+include ':third-party:SuperToasts'
+include ':third-party:AmbilWarna'
+include ':third-party:drag-sort-listview'
+include ':third-party:android-filechooser'

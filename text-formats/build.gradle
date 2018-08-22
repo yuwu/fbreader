@@ -1,0 +1,46 @@
+apply plugin: 'com.android.library'
+
+android {
+	compileSdkVersion rootProject.ext.compileSdkVersion
+	buildToolsVersion rootProject.ext.buildToolsVersion
+
+	lintOptions {
+		abortOnError false
+	}
+
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_7
+		targetCompatibility JavaVersion.VERSION_1_7
+	}
+
+	sourceSets {
+		main.java.srcDirs = ['src/main/java']
+		main.aidl.srcDirs = ['src/main/java']
+		main.res.srcDirs = ['src/main/res']
+		main.jniLibs.srcDirs = ['src/main/libs']
+		main.jni.srcDirs = []
+		main.manifest.srcFile 'src/main/AndroidManifest.xml'
+	}
+
+	defaultConfig {
+		minSdkVersion rootProject.ext.minSdkVersion
+		targetSdkVersion rootProject.ext.targetSdkVersion
+		versionCode 1
+		versionName "1.0"
+	}
+
+	task ndkBuild(type: Exec) {
+		//def ndkDir = plugins.getPlugin('com.android.library').sdkHandler.getNdkFolder()
+		def ndkDir = project.android.ndkDirectory
+		commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
+	}
+
+	tasks.withType(JavaCompile) {
+		compileTask -> compileTask.dependsOn ndkBuild
+	}
+
+	clean {
+		delete 'src/main/obj'
+		delete 'src/main/libs'
+	}
+}

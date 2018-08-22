@@ -1,0 +1,47 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    lintOptions {
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility rootProject.ext.sourceCompatibility
+        targetCompatibility rootProject.ext.targetCompatibility
+    }
+
+    sourceSets {
+        main.java.srcDirs = ['src/main/java']
+        main.jniLibs.srcDirs = ['src/main/libs']
+        main.jni.srcDirs = []
+    }
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+    }
+
+    task ndkBuild(type: Exec) {
+        def ndkDir = project.android.ndkDirectory
+        commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn ndkBuild
+    }
+
+    clean {
+        delete 'src/main/obj'
+        delete 'src/main/libs'
+    }
+}
+
+dependencies {
+    implementation project(':api')
+    implementation project(':util')
+}
