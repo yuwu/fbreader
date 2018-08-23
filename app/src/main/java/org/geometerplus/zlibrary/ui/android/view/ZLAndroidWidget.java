@@ -95,11 +95,9 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 			System.err.println("A surprise: view's context is not an FBReader");
 		}
 		super.onDraw(canvas);
-
 //		final int w = getWidth();
 //		final int h = getMainAreaHeight();
-
-		myBitmapManager.setSize(getWidth(), getMainAreaHeight());
+		myBitmapManager.setSize(getWidth(), getTotalAreaHeight());
 		if (getAnimationProvider().inProgress()) {
 			onDrawInScrolling(canvas);
 		} else {
@@ -178,7 +176,7 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 	@Override
 	public void startManualScrolling(int x, int y, ZLView.Direction direction) {
 		final AnimationProvider animator = getAnimationProvider();
-		animator.setup(direction, getWidth(), getMainAreaHeight(), myColorLevel);
+		animator.setup(direction, getWidth(), getTotalAreaHeight(), myColorLevel);
 		animator.startManualScrolling(x, y);
 	}
 
@@ -199,7 +197,7 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 			return;
 		}
 		final AnimationProvider animator = getAnimationProvider();
-		animator.setup(direction, getWidth(), getMainAreaHeight(), myColorLevel);
+		animator.setup(direction, getWidth(), getTotalAreaHeight(), myColorLevel);
 		animator.startAnimatedScrolling(pageIndex, x, y, speed);
 		if (animator.getMode().Auto) {
 			postInvalidate();
@@ -213,7 +211,7 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 			return;
 		}
 		final AnimationProvider animator = getAnimationProvider();
-		animator.setup(direction, getWidth(), getMainAreaHeight(), myColorLevel);
+		animator.setup(direction, getWidth(), getTotalAreaHeight(), myColorLevel);
 		animator.startAnimatedScrolling(pageIndex, null, null, speed);
 		if (animator.getMode().Auto) {
 			postInvalidate();
@@ -559,9 +557,17 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 		return view.getScrollbarFullSize();
 	}
 
+	private int getTotalAreaHeight() {
+		return getHeight();
+	}
+
 	private int getMainAreaHeight() {
+		return getHeight() - getFooterAreaHeight();
+	}
+
+	private int getFooterAreaHeight() {
 		final ZLView.FooterArea footer = ZLApplication.Instance().getCurrentView().getFooterArea();
-		return footer != null ? getHeight() - footer.getHeight() : getHeight();
+		return footer != null ? footer.getHeight() : 0;
 	}
 
 	@Override

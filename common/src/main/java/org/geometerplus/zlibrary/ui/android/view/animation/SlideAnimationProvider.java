@@ -19,9 +19,13 @@
 
 package org.geometerplus.zlibrary.ui.android.view.animation;
 
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 
+import org.geometerplus.zlibrary.core.view.ZLViewEnums;
 import org.geometerplus.zlibrary.ui.android.view.ViewUtil;
 
 public final class SlideAnimationProvider extends SimpleAnimationProvider {
@@ -46,18 +50,18 @@ public final class SlideAnimationProvider extends SimpleAnimationProvider {
 	}
 
 	private void drawShadow(Canvas canvas, int top, int bottom, int dX) {
-		final GradientDrawable.Orientation orientation = dX > 0
-			? GradientDrawable.Orientation.RIGHT_LEFT
-			: GradientDrawable.Orientation.LEFT_RIGHT;
-		final int[] colors = new int[] { 0x46000000, 0x00000000 };
-		final GradientDrawable gradient = new GradientDrawable(orientation, colors);
-		gradient.setGradientType(GradientDrawable.LINEAR_GRADIENT);
-		gradient.setDither(true);
+//		final GradientDrawable.Orientation orientation = dX > 0
+//				? GradientDrawable.Orientation.RIGHT_LEFT
+//				: GradientDrawable.Orientation.LEFT_RIGHT;
+		final int[] color = new int[] { 0x46000000, 0x00000000 };
+		final GradientDrawable gradient = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, color);
 		if (dX > 0) {
-			gradient.setBounds(dX - 16, top, dX, bottom);
+			gradient.setBounds(dX, top, dX+16, bottom);
 		} else {
 			gradient.setBounds(myWidth + dX, top, myWidth + dX + 16, bottom);
 		}
+		gradient.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+		gradient.setDither(true);
 		gradient.draw(canvas);
 	}
 
@@ -66,9 +70,20 @@ public final class SlideAnimationProvider extends SimpleAnimationProvider {
 		if (myDirection.IsHorizontal) {
 			final int dX = myEndX - myStartX;
 			setDarkFilter(dX, myWidth);
-			drawBitmapTo(canvas, 0, 0, myDarkPaint);
-			drawBitmapFrom(canvas, dX, 0, myPaint);
+			ZLViewEnums.PageIndex index = getPageToScrollTo();
+			if(index == ZLViewEnums.PageIndex.previous){
+				drawBitmapFrom(canvas, 0, 0, myPaint);
+				drawBitmapTo(canvas, dX-myWidth, 0, myPaint);
+			}else{
+				drawBitmapTo(canvas, 0, 0, myPaint);
+				drawBitmapFrom(canvas, dX, 0, myPaint);
+			}
 			drawShadow(canvas, 0, myHeight, dX);
+//			final int dX = myEndX - myStartX;
+//			setDarkFilter(dX, myWidth);
+//			drawBitmapTo(canvas, 0, 0, myPaint);
+//			drawBitmapFrom(canvas, dX, 0, myPaint);
+//			drawShadow(canvas, 0, myHeight, dX);
 		} else {
 			final int dY = myEndY - myStartY;
 			setDarkFilter(dY, myHeight);
@@ -79,29 +94,30 @@ public final class SlideAnimationProvider extends SimpleAnimationProvider {
 
 	private void drawBitmapInternal(Canvas canvas, Bitmap bm, int left, int right, int height, int voffset, Paint paint) {
 		canvas.drawBitmap(
-			bm,
-			new Rect(left, 0, right, height),
-			new Rect(left, voffset, right, voffset + height),
-			paint
+				bm,
+				new Rect(left, 0, right, height),
+				new Rect(left, voffset, right, voffset + height),
+				paint
 		);
 	}
 
 	@Override
 	protected void drawFooterBitmapInternal(Canvas canvas, Bitmap footerBitmap, int voffset) {
-		if (myDirection.IsHorizontal) {
-			final int dX = myEndX - myStartX;
-			setDarkFilter(dX, myWidth);
-			final int h = footerBitmap.getHeight();
-			if (dX > 0) {
-				drawBitmapInternal(canvas, footerBitmap, 0, dX, h, voffset, myDarkPaint);
-				drawBitmapInternal(canvas, footerBitmap, dX, myWidth, h, voffset, myPaint);
-			} else {
-				drawBitmapInternal(canvas, footerBitmap, myWidth + dX, myWidth, h, voffset, myDarkPaint);
-				drawBitmapInternal(canvas, footerBitmap, 0, myWidth + dX, h, voffset, myPaint);
-			}
-			drawShadow(canvas, voffset, voffset + h, dX);
-		} else {
-			canvas.drawBitmap(footerBitmap, 0, voffset, myPaint);
-		}
+//		if (myDirection.IsHorizontal) {
+//			final int dX = myEndX - myStartX;
+//			setDarkFilter(dX, myWidth);
+//			final int h = footerBitmap.getHeight();
+//			if (dX > 0) {
+//				drawBitmapInternal(canvas, footerBitmap, 0, dX, h, voffset, myDarkPaint);
+//				drawBitmapInternal(canvas, footerBitmap, dX, myWidth, h, voffset, myPaint);
+//			} else {
+//				drawBitmapInternal(canvas, footerBitmap, myWidth + dX, myWidth, h, voffset, myDarkPaint);
+//				drawBitmapInternal(canvas, footerBitmap, 0, myWidth + dX, h, voffset, myPaint);
+//			}
+//			drawShadow(canvas, voffset, voffset + h, dX);
+//		} else {
+//			canvas.drawBitmap(footerBitmap, 0, voffset, myPaint);
+//		}
+		canvas.drawBitmap(footerBitmap, 0, voffset, myPaint);
 	}
 }
