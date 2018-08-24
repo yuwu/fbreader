@@ -19,20 +19,31 @@
 
 package org.geometerplus.zlibrary.ui.android.view;
 
-import java.util.List;
-
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.CornerPathEffect;
+import android.graphics.EmbossMaskFilter;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 
 import org.geometerplus.zlibrary.core.filesystem.ZLFile;
 import org.geometerplus.zlibrary.core.fonts.FontEntry;
 import org.geometerplus.zlibrary.core.image.ZLImageData;
 import org.geometerplus.zlibrary.core.options.ZLBooleanOption;
-import org.geometerplus.zlibrary.core.util.ZLColor;
 import org.geometerplus.zlibrary.core.util.SystemInfo;
+import org.geometerplus.zlibrary.core.util.ZLColor;
 import org.geometerplus.zlibrary.core.view.ZLPaintContext;
-
 import org.geometerplus.zlibrary.ui.android.image.ZLAndroidImageData;
 import org.geometerplus.zlibrary.ui.android.util.ZLAndroidColorUtil;
+
+import java.util.List;
 
 public final class ZLAndroidPaintContext extends ZLPaintContext {
 	public static ZLBooleanOption AntiAliasOption = new ZLBooleanOption("Fonts", "AntiAlias", true);
@@ -202,8 +213,8 @@ public final class ZLAndroidPaintContext extends ZLPaintContext {
 				{
 					final int dx = g.LeftMargin % w;
 					final int dy = g.TopMargin % h;
-					final int fullw = g.AreaSize.Width + dx;
-					final int fullh = g.AreaSize.Height + dy;
+					final int fullw = g.ScreenSize.Width + dx;
+					final int fullh = g.ScreenSize.Height + dy;
 					for (int cw = 0; cw < fullw; cw += w) {
 						for (int ch = 0; ch < fullh; ch += h) {
 							myCanvas.drawBitmap(ourWallpaper, cw - dx, ch - dy, myFillPaint);
@@ -220,7 +231,8 @@ public final class ZLAndroidPaintContext extends ZLPaintContext {
 	@Override
 	public void clear(ZLColor color) {
 		myBackgroundColor = color;
-		myFillPaint.setColor(ZLAndroidColorUtil.rgb(color));
+		myFillPaint.setColor(ZLAndroidColorUtil.rgba(color, color.Alpha));
+		myCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 		myCanvas.drawRect(0, 0, myGeometry.AreaSize.Width, myGeometry.AreaSize.Height, myFillPaint);
 	}
 

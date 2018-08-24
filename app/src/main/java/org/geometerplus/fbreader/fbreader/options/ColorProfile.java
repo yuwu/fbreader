@@ -95,6 +95,10 @@ public class ColorProfile {
 		return new ZLColorOption("Colors", profileName + ':' + optionName, new ZLColor(r, g, b));
 	}
 
+	private static ZLColorOption createOption(String profileName, String optionName, int a, int r, int g, int b) {
+		return new ZLColorOption("Colors", profileName + ':' + optionName, new ZLColor(a, r, g, b));
+	}
+
 	private static ZLColorOption createNullOption(String profileName, String optionName) {
 		return new ZLColorOption("Colors", profileName + ':' + optionName, null);
 	}
@@ -125,11 +129,11 @@ public class ColorProfile {
 			FooterFillOption =
 				createOption(name, "FooterFillOption", 85, 85, 85);
 			FooterNGBackgroundOption =
-				createOption(name, "FooterNGBackgroundOption", 68, 68, 68);
+				createOption(name, "FooterNGBackgroundOption", 80,00, 00, 00);
 			FooterNGForegroundOption =
-				createOption(name, "FooterNGForegroundOption", 187, 187, 187);
+				createOption(name, "FooterNGForegroundOption", 33, 33, 33);
 			FooterNGForegroundUnreadOption =
-				createOption(name, "FooterNGForegroundUnreadOption", 119, 119, 119);
+				createOption(name, "FooterNGForegroundUnreadOption", 33, 33, 33);
 		} else {
 			WallpaperOption =
 				new ZLStringOption("Colors", name + ":Wallpaper", "wallpapers/sepia.jpg");
@@ -154,11 +158,11 @@ public class ColorProfile {
 			FooterFillOption =
 				createOption(name, "FooterFillOption", 170, 170, 170);
 			FooterNGBackgroundOption =
-				createOption(name, "FooterNGBackgroundOption", 68, 68, 68);
+				createOption(name, "FooterNGBackgroundOption", 80,00, 00, 00);
 			FooterNGForegroundOption =
-				createOption(name, "FooterNGForegroundOption", 187, 187, 187);
+				createOption(name, "FooterNGForegroundOption", 66, 66, 66);
 			FooterNGForegroundUnreadOption =
-				createOption(name, "FooterNGForegroundUnreadOption", 119, 119, 119);
+				createOption(name, "FooterNGForegroundUnreadOption", 128, 128, 128);
 		}
 	}
 }

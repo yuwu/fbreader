@@ -19,26 +19,36 @@
 
 package org.geometerplus.zlibrary.ui.android.view;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
-
 import android.content.Context;
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.view.*;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
 
+import org.geometerplus.android.fbreader.FBReader;
+import org.geometerplus.fbreader.Paths;
+import org.geometerplus.fbreader.fbreader.options.ColorProfile;
+import org.geometerplus.fbreader.util.AutoTextSnippet;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.application.ZLKeyBindings;
+import org.geometerplus.zlibrary.core.options.ZLColorOption;
 import org.geometerplus.zlibrary.core.util.SystemInfo;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
 import org.geometerplus.zlibrary.text.view.ZLTextView;
+import org.geometerplus.zlibrary.ui.android.view.animation.AnimationProvider;
+import org.geometerplus.zlibrary.ui.android.view.animation.CurlAnimationProvider;
+import org.geometerplus.zlibrary.ui.android.view.animation.NoneAnimationProvider;
+import org.geometerplus.zlibrary.ui.android.view.animation.ShiftAnimationProvider;
+import org.geometerplus.zlibrary.ui.android.view.animation.SlideAnimationProvider;
+import org.geometerplus.zlibrary.ui.android.view.animation.SlideOldStyleAnimationProvider;
 
-import org.geometerplus.zlibrary.ui.android.view.animation.*;
-
-import org.geometerplus.fbreader.Paths;
-import org.geometerplus.fbreader.util.AutoTextSnippet;
-import org.geometerplus.android.fbreader.FBReader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLongClickListener {
 	public final ExecutorService PrepareService = Executors.newSingleThreadExecutor();
@@ -95,8 +105,6 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 			System.err.println("A surprise: view's context is not an FBReader");
 		}
 		super.onDraw(canvas);
-//		final int w = getWidth();
-//		final int h = getMainAreaHeight();
 		myBitmapManager.setSize(getWidth(), getTotalAreaHeight());
 		if (getAnimationProvider().inProgress()) {
 			onDrawInScrolling(canvas);
@@ -267,7 +275,7 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 			myFooterBitmap = null;
 		}
 		if (myFooterBitmap == null) {
-			myFooterBitmap = Bitmap.createBitmap(getWidth(), footer.getHeight(), Bitmap.Config.RGB_565);
+			myFooterBitmap = Bitmap.createBitmap(getWidth(), footer.getHeight(), Bitmap.Config.ARGB_4444);
 		}
 		final ZLAndroidPaintContext context = new ZLAndroidPaintContext(
 			mySystemInfo,
@@ -366,8 +374,8 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 	private boolean myScreenIsTouched;
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		int x = (int)event.getX();
-		int y = (int)event.getY();
+		final int x = (int)event.getX();
+		final int y = (int)event.getY();
 
 		final ZLView view = ZLApplication.Instance().getCurrentView();
 		switch (event.getAction()) {
@@ -457,7 +465,6 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 				break;
 			}
 		}
-
 		return true;
 	}
 

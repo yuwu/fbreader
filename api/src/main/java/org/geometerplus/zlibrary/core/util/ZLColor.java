@@ -24,24 +24,35 @@ package org.geometerplus.zlibrary.core.util;
  * Each component should be in the range 0..255
  */
 public final class ZLColor {
+	public final short Alpha;
 	public final short Red;
 	public final short Green;
 	public final short Blue;
 
+	public ZLColor(int a, int r, int g, int b) {
+		Alpha = (short)(a & 0xFF);
+		Red = (short)(r & 0xFF);
+		Green = (short)(g & 0xFF);
+		Blue = (short)(b & 0xFF);
+	}
+
+
 	public ZLColor(int r, int g, int b) {
+		Alpha = 255;
 		Red = (short)(r & 0xFF);
 		Green = (short)(g & 0xFF);
 		Blue = (short)(b & 0xFF);
 	}
 
 	public ZLColor(int intValue) {
+		Alpha = (short)((intValue >> 24) & 0xFF);
 		Red = (short)((intValue >> 16) & 0xFF);
 		Green = (short)((intValue >> 8) & 0xFF);
 		Blue = (short)(intValue & 0xFF);
 	}
 
 	public int intValue() {
-		return (Red << 16) + (Green << 8) + Blue;
+		return (Alpha << 24) + (Red << 16) + (Green << 8) + Blue;
 	}
 
 	@Override

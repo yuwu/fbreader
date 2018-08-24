@@ -19,12 +19,14 @@
 
 package org.geometerplus.zlibrary.ui.android.view.animation;
 
-import android.graphics.*;
-import android.util.FloatMath;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PointF;
 
 import org.geometerplus.zlibrary.core.util.BitmapUtil;
 import org.geometerplus.zlibrary.core.view.ZLViewEnums;
-
 import org.geometerplus.zlibrary.ui.android.util.ZLAndroidColorUtil;
 import org.geometerplus.zlibrary.ui.android.view.ViewUtil;
 
@@ -340,5 +342,19 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		ViewUtil.setColorLevel(myPaint, myColorLevel);
 		ViewUtil.setColorLevel(myBackPaint, myColorLevel);
 		ViewUtil.setColorLevel(myEdgePaint, myColorLevel);
+	}
+
+	/**
+	 * 求解直线P1P2和直线P3P4的交点坐标
+	 */
+	public PointF getCross(PointF P1, PointF P2, PointF P3, PointF P4) {
+		PointF crossp = new PointF();
+		float a1 = (P2.y - P1.y) / (P2.x - P1.x);
+		float b1 = ((P1.x * P2.y) - (P2.x * P1.y)) / (P1.x - P2.x);
+		float a2 = (P4.y - P3.y) / (P4.x - P3.x);
+		float b2 = ((P3.x * P4.y) - (P4.x * P3.y)) / (P3.x - P4.x);
+		crossp.x = (b2 - b1) / (a1 - a2);
+		crossp.y = a1 * crossp.x + b1;
+		return crossp;
 	}
 }
