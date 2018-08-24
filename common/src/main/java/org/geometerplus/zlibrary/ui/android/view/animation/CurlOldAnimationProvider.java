@@ -25,14 +25,13 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
-import android.graphics.drawable.GradientDrawable;
 
 import org.geometerplus.zlibrary.core.util.BitmapUtil;
 import org.geometerplus.zlibrary.core.view.ZLViewEnums;
 import org.geometerplus.zlibrary.ui.android.util.ZLAndroidColorUtil;
 import org.geometerplus.zlibrary.ui.android.view.ViewUtil;
 
-public final class CurlAnimationProvider extends AnimationProvider {
+public final class CurlOldAnimationProvider extends AnimationProvider {
 	private final Paint myPaint = new Paint();
 	private final Paint myBackPaint = new Paint();
 	private final Paint myEdgePaint = new Paint();
@@ -43,12 +42,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 	private float mySpeedFactor = 1;
 
-	GradientDrawable mBackShadowDrawableLR; // 有阴影的GradientDrawable
-	GradientDrawable mBackShadowDrawableRL;
-	GradientDrawable mFolderShadowDrawableLR;
-	GradientDrawable mFolderShadowDrawableRL;
-
-	public CurlAnimationProvider(BitmapManager bitmapManager) {
+	public CurlOldAnimationProvider(BitmapManager bitmapManager) {
 		super(bitmapManager);
 
 		myBackPaint.setAntiAlias(true);
@@ -56,9 +50,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 		myEdgePaint.setAntiAlias(true);
 		myEdgePaint.setStyle(Paint.Style.FILL);
-		myEdgePaint.setShadowLayer(30, 0, 0, 0xff000000);
-
-		createDrawable();
+		myEdgePaint.setShadowLayer(15, 0, 0, 0xC0000000);
 	}
 
 	private Bitmap myBuffer;
@@ -199,6 +191,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 			(x + x1) / 2,
 			(y + cornerY) / 2
 		);
+
 		canvas.drawPath(myEdgePath, myEdgePaint);
 
 		canvas.save();
@@ -215,10 +208,6 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		m.postRotate(angle, x, y);
 		canvas.drawBitmap(getBitmapFrom(), m, myBackPaint);
 		canvas.restore();
-
-		mBackShadowDrawableLR.setBounds(0,0, cornerX, cornerY);
-		mBackShadowDrawableLR.draw(canvas);
-
 		/*
 		canvas.save();
 		canvas.clipPath(myEdgePath);
@@ -382,24 +371,5 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		crossp.x = (b2 - b1) / (a1 - a2);
 		crossp.y = a1 * crossp.x + b1;
 		return crossp;
-	}
-
-	/**
-	 * 创建阴影的GradientDrawable
-	 */
-	private void createDrawable() {
-		int[] color = {0x333333, 0xb0333333};
-		mFolderShadowDrawableRL = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT, color);
-		mFolderShadowDrawableRL.setGradientType(GradientDrawable.LINEAR_GRADIENT);
-
-		mFolderShadowDrawableLR = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, color);
-		mFolderShadowDrawableLR.setGradientType(GradientDrawable.LINEAR_GRADIENT);
-
-		int[] mBackShadowColors = new int[]{0xff111111, 0x111111};
-		mBackShadowDrawableRL = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT, mBackShadowColors);
-		mBackShadowDrawableRL.setGradientType(GradientDrawable.LINEAR_GRADIENT);
-
-		mBackShadowDrawableLR = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, mBackShadowColors);
-		mBackShadowDrawableLR.setGradientType(GradientDrawable.LINEAR_GRADIENT);
 	}
 }
