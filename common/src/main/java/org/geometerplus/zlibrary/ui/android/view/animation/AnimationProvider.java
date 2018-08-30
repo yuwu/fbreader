@@ -22,6 +22,7 @@ package org.geometerplus.zlibrary.ui.android.view.animation;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.util.Log;
 
 import org.geometerplus.zlibrary.core.library.ZLibrary;
 import org.geometerplus.zlibrary.core.view.ZLViewEnums;
@@ -72,7 +73,7 @@ public abstract class AnimationProvider {
 		myDrawInfos.clear();
 	}
 
-	public final void startManualScrolling(int x, int y) {
+	public void startManualScrolling(int x, int y) {
 		if (!myMode.Auto) {
 			myMode = Mode.PreManualScrolling;
 			myEndX = myStartX = x;
@@ -99,7 +100,7 @@ public abstract class AnimationProvider {
 		return Mode.PreManualScrolling;
 	}
 
-	public final void scrollTo(int x, int y) {
+	public void scrollTo(int x, int y) {
 		switch (myMode) {
 			case ManualScrolling:
 				myEndX = x;
@@ -176,7 +177,6 @@ public abstract class AnimationProvider {
 		if (myMode.Auto) {
 			return;
 		}
-
 		terminate();
 		myMode = Mode.AnimatedScrollingForward;
 

@@ -31,11 +31,9 @@ import android.view.ViewConfiguration;
 
 import org.geometerplus.android.fbreader.FBReader;
 import org.geometerplus.fbreader.Paths;
-import org.geometerplus.fbreader.fbreader.options.ColorProfile;
 import org.geometerplus.fbreader.util.AutoTextSnippet;
 import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.application.ZLKeyBindings;
-import org.geometerplus.zlibrary.core.options.ZLColorOption;
 import org.geometerplus.zlibrary.core.util.SystemInfo;
 import org.geometerplus.zlibrary.core.view.ZLView;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
@@ -78,11 +76,14 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 	}
 
 	private void init() {
+		// disable hardware acceleration
+		//setLayerType(LAYER_TYPE_SOFTWARE, null);
 		// next line prevent ignoring first onKeyDown DPad event
 		// after any dialog was closed
 		setFocusableInTouchMode(true);
 		setDrawingCacheEnabled(false);
 		setOnLongClickListener(this);
+//		ZLApplication.Instance().addAction()
 	}
 
 	@Override

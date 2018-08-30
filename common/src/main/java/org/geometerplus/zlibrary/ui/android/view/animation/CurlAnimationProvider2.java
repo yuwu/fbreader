@@ -27,16 +27,13 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.RectF;
-import android.graphics.Region;
-import android.util.Log;
 
 import org.geometerplus.zlibrary.core.util.BitmapUtil;
 import org.geometerplus.zlibrary.core.view.ZLViewEnums;
 import org.geometerplus.zlibrary.ui.android.util.ZLAndroidColorUtil;
 import org.geometerplus.zlibrary.ui.android.view.ViewUtil;
 
-public final class CurlAnimationProvider extends AnimationProvider {
+public final class CurlAnimationProvider2 extends AnimationProvider {
 	private final Paint myPaint = new Paint();
 	private final Paint myBackPaint = new Paint();
 	private final Paint myEdgePaint = new Paint();
@@ -49,21 +46,10 @@ public final class CurlAnimationProvider extends AnimationProvider {
 	private final Paint myLinePaint = new Paint();
 	private final Paint myTextPaint = new Paint();
 
-	final Path path = new Path();
-	private final Paint paint = new Paint();
-
 	private float mySpeedFactor = 1;
 
-	private Point a,f,g,e,h,c,j,b,k,d,i;
-
-	public CurlAnimationProvider(BitmapManager bitmapManager) {
+	public CurlAnimationProvider2(BitmapManager bitmapManager) {
 		super(bitmapManager);
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setColor(Color.BLUE);
-		paint.setTextSize(4);
-		paint.setStrokeWidth(2);
-		paint.setAntiAlias(true);
-
 		myPointPaint.setColor(Color.RED);
 
 		myTextPaint.setTextSize(48);
@@ -80,18 +66,6 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		myEdgePaint.setAntiAlias(true);
 		myEdgePaint.setStyle(Paint.Style.FILL);
 		myEdgePaint.setShadowLayer(15, 0, 0, 0xC0000000);
-
-		a = new Point();
-		f = new Point();
-		g = new Point();
-		e = new Point();
-		h = new Point();
-		c = new Point();
-		j = new Point();
-		b = new Point();
-		k = new Point();
-		d = new Point();
-		i = new Point();
 	}
 
 	private Bitmap myBuffer;
@@ -109,12 +83,12 @@ public final class CurlAnimationProvider extends AnimationProvider {
 				myBuffer = BitmapUtil.createBitmap(myWidth, myHeight, getBitmapTo().getConfig());
 			}
 			final Canvas softCanvas = new Canvas(myBuffer);
-//			drawInternalNoHack(softCanvas);
+			//drawInternalNoHack(softCanvas);
 			drawDebugInternalNoHack(softCanvas);
 			canvas.drawBitmap(myBuffer, 0, 0, myPaint);
 		} else {
 			try {
-//				drawInternalNoHack(canvas);
+				//drawInternalNoHack(canvas);
 				drawDebugInternalNoHack(canvas);
 			} catch (UnsupportedOperationException e) {
 				myUseCanvasHack = true;
@@ -123,92 +97,12 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		}
 	}
 
-	@Override
-	public void scrollTo(int x, int y) {
+	private void check(Canvas canvas){
 		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
 		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
 		final int oppositeX = Math.abs(myWidth - cornerX);
 		final int oppositeY = Math.abs(myHeight - cornerY);
-		super.scrollTo(x, y);
-	}
-
-	private void drawDebugInternalNoHack(Canvas canvas){
-		drawBitmapTo(canvas, 0, 0, myPaint);
-		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
-		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
-		final int oppositeX = Math.abs(myWidth - cornerX);
-		final int oppositeY = Math.abs(myHeight - cornerY);
-
-		//Log.d("DEBUG", " myStartX:" + myStartX + " myStartY:" + myStartY + " endX:" + myEndX + " endY:" + myEndY);
-
-		int ax = myEndX;
-		int ay = myEndY;
-
-		if (cornerY == 0) {
-			ay = Math.max(1, ay);
-		} else {
-			ay = Math.min(myHeight - 1, ay);
-		}
-
-		// check
-		{
-			float r = myWidth;
-			boolean contains = circleContains(oppositeX, cornerY, r, ax, ay);
-			if(!contains){
-				PointF point = circleCross(oppositeX, cornerY, r, ax, ay);
-				ax = (int)point.x;
-				ay = (int)point.y;
-			}
-			ay = (int)Math.max(ay, myHeight - myWidth * 3 / 4f);
-
-			float s = calcPoints(new Point(ax, ay), new Point(cornerX, cornerY));
-			Log.d("DEBUG", " s:" + s + " max:" + (myWidth * 1 / 4f * myWidth * 1 / 4f / 2));
-		}
-
-		int gx = (cornerX + ax)/2;
-		int gy = (cornerY + ay)/2;
-00
-		int hx = cornerX;
-		int hy = gy - (cornerX-gx) * (cornerX-gx) / (cornerY-gy);
-
-		int ex = gx - (cornerY-gy) * (cornerY-gy) / (cornerX-gx);
-		int ey = cornerY;
-
-		float bx = ax + 3/4f * (ex - ax);
-		float by = ay + 3/4f * (cornerY - ay);
-		float cx = ax + (ex - ax) - 1/4f * (cornerX - ex);
-		float cy = cornerY;
-
-		path.reset();
-		path.moveTo(ax, ay);
-		path.lineTo(hx, hy);
-		path.lineTo(ex, ey);
-		path.lineTo(ax, ay);
-		canvas.drawPath(path, paint);
-
-		path.reset();
-		path.moveTo(cx, cy);
-		path.quadTo(ex, ey, bx, by);
-		canvas.drawPath(path, paint);
-
-		canvas.drawCircle(oppositeX, cornerY, myWidth, paint);
-
-		canvas.drawCircle(cx, cy, 4, paint);
-		canvas.drawCircle(bx, by, 4, paint);
-	}
-
-	@Override
-	public void startManualScrolling(int x, int y) {
-		super.startManualScrolling(x, y);
-	}
-
-	private void drawInternalNoHack(Canvas canvas) {
-		drawBitmapTo(canvas, 0, 0, myPaint);
-		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
-		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
-		final int oppositeX = Math.abs(myWidth - cornerX);
-		final int oppositeY = Math.abs(myHeight - cornerY);
-		int x, y;
+		final int x, y;
 		if (myDirection.IsHorizontal) {
 			x = myEndX;
 			if (getMode().Auto) {
@@ -232,14 +126,280 @@ public final class CurlAnimationProvider extends AnimationProvider {
 				}
 			}
 		}
+		final int dX = Math.max(1, Math.abs(x - cornerX));
+		final int dY = Math.max(1, Math.abs(y - cornerY));
 
-		boolean contains = circleContains(oppositeX, cornerY, myWidth, x, y);
-		if(!contains){
-			PointF point = circleCross(oppositeX, cornerY, myWidth, x, y);
-			x = (int)point.x;
-			y = (int)point.y;
+		final int x1 = cornerX == 0
+				? (dY * dY / dX + dX) / 2
+				: cornerX - (dY * dY / dX + dX) / 2;
+		final int y1 = cornerY == 0
+				? (dX * dX / dY + dY) / 2
+				: cornerY - (dX * dX / dY + dY) / 2;
+
+		float sX, sY;
+		{
+			float d1 = x - x1;
+			float d2 = y - cornerY;
+			sX = (float) Math.sqrt(d1 * d1 + d2 * d2) / 2;
+			if (cornerX == 0) {
+				sX = -sX;
+			}
+		}
+		{
+			float d1 = x - cornerX;
+			float d2 = y - y1;
+			sY = (float)Math.sqrt(d1 * d1 + d2 * d2) / 2;
+			if (cornerY == 0) {
+				sY = -sY;
+			}
+		}
+	}
+
+	private void drawDebugInternalNoHack(Canvas canvas){
+		drawBitmapTo(canvas, 0, 0, myPaint);
+
+		//final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
+		final int cornerX = myWidth;
+		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
+		final int oppositeX = Math.abs(myWidth - cornerX);
+		final int oppositeY = Math.abs(myHeight - cornerY);
+
+		int x, y;
+		if (myDirection.IsHorizontal) {
+			x = myEndX;
+			if (getMode().Auto) {
+				y = myEndY;
+			} else {
+				if (cornerY == 0) {
+					y = Math.max(1, Math.min(myHeight / 2, myEndY));
+				} else {
+					y = Math.max(myHeight / 2, Math.min(myHeight - 1, myEndY));
+				}
+			}
+
+//			x = myEndX;
+//			if (getMode().Auto) {
+//				y = myEndY;
+//			} else {
+//				if (cornerY == 0) {
+//					y = Math.max(1, Math.min(myHeight / 2, myEndY));
+//				} else {
+//					y = Math.max(myHeight / 2, Math.min(myHeight - 1, myEndY));
+//				}
+//			}
+		} else {
+			y = myEndY;
+			if (getMode().Auto) {
+				x = myEndX;
+			} else {
+				if (cornerX == 0) {
+					x = Math.max(1, Math.min(myWidth / 2, myEndX));
+				} else {
+					x = Math.max(myWidth / 2, Math.min(myWidth - 1, myEndX));
+				}
+			}
 		}
 
+		final int dX = Math.max(1, Math.abs(x - cornerX));
+		final int dY = Math.max(1, Math.abs(y - cornerY));
+
+		final int x1 = cornerX == 0
+				? (dY * dY / dX + dX) / 2
+				: cornerX - (dY * dY / dX + dX) / 2;
+		final int y1 = cornerY == 0
+				? (dX * dX / dY + dY) / 2
+				: cornerY - (dX * dX / dY + dY) / 2;
+
+		float sX, sY;
+		{
+			float d1 = x - x1;
+			float d2 = y - cornerY;
+			sX = (float) Math.sqrt(d1 * d1 + d2 * d2) / 2;
+			if (cornerX == 0) {
+				sX = -sX;
+			}
+		}
+		{
+			float d1 = x - cornerX;
+			float d2 = y - y1;
+			sY = (float)Math.sqrt(d1 * d1 + d2 * d2) / 2;
+			if (cornerY == 0) {
+				sY = -sY;
+			}
+		}
+
+		//
+		float ax = x;
+		float ay = y;
+
+		float kx = (x + cornerX) / 2;
+		float ky = (y + y1) / 2;
+
+		float hx = cornerX;
+		float hy = y1;
+
+		float jx = cornerX;
+		float jy = y1 - sY;
+
+		float cx = x1 - sX;
+		float cy = cornerY;
+
+		float ex = x1;
+		float ey = cornerY;
+
+		float bx = (x + x1) / 2;
+		float by = (y + cornerY) / 2;
+
+		float ix = (x + 7 * cornerX) / 8;
+		float iy = (y + 7 * y1 - 2 * sY) / 8;
+
+		float dx = (x + 7 * x1 - 2 * sX) / 8;
+		float dy = (y + 7 * cornerY) / 8;
+
+		float kix = (x + 3 * cornerX) / 4;
+		float kiy = (y + 3 * y1) / 4;
+
+		float dbx = (x + 3 * x1) / 4;
+		float dby = (y + 3 * cornerY) / 4;
+
+		{
+			myQuadPath.moveTo(cx, cy);
+			myQuadPath.quadTo(ex, ey, bx, by);
+			canvas.drawPath(myQuadPath, myEdgePaint);
+			myQuadPath.rewind();
+			myQuadPath.moveTo(kx, ky);
+			myQuadPath.quadTo(hx, hy, jx, jy);
+			canvas.drawPath(myQuadPath, myEdgePaint);
+			myQuadPath.rewind();
+		}
+
+		{
+			myFgPath.rewind();
+			myFgPath.moveTo(ax, ay);
+			myFgPath.lineTo(kx, ky);
+			myFgPath.quadTo(hx, hy, jx, jy);
+			if (Math.abs(y1 - sY - cornerY) < myHeight) {
+				myFgPath.lineTo(cornerX, oppositeY);
+			}
+
+			myFgPath.lineTo(oppositeX, oppositeY);
+			if (Math.abs(x1 - sX - cornerX) < myWidth) {
+				myFgPath.lineTo(oppositeX, cornerY);
+			}
+			myFgPath.lineTo(cx, cy);
+			myFgPath.quadTo(ex, ey, bx, by);
+			myFgPath.lineTo(x, y);
+			canvas.drawPath(myFgPath, myLinePaint);
+
+			canvas.save();
+			canvas.clipPath(myFgPath);
+			drawBitmapFrom(canvas, 0, 0, myPaint);
+			canvas.restore();
+		}
+
+		{
+			myEdgePaint.setColor(ZLAndroidColorUtil.rgb(ZLAndroidColorUtil.getAverageColor(getBitmapFrom())));
+			myEdgePath.rewind();
+			myEdgePath.moveTo(ax, ay);
+			myEdgePath.lineTo(kx,ky);
+			myEdgePath.quadTo(kix, kiy, ix, iy);
+
+			myEdgePath.lineTo(dx, dy);
+			myEdgePath.quadTo(dbx, dby, bx, by);
+
+			canvas.drawPath(myEdgePath, myEdgePaint);
+
+			canvas.save();
+			canvas.clipPath(myEdgePath);
+			final Matrix m = new Matrix();
+			m.postScale(1, -1);
+			m.postTranslate(x - cornerX, y + cornerY);
+			final float angle;
+			if (cornerY == 0) {
+				angle = -180 / 3.1416f * (float)Math.atan2(x - cornerX, y - y1);
+			} else {
+				angle = 180 - 180 / 3.1416f * (float)Math.atan2(x - cornerX, y - y1);
+			}
+			m.postRotate(angle, x, y);
+			canvas.drawBitmap(getBitmapFrom(), m, myBackPaint);
+			canvas.restore();
+		}
+
+		{
+			//
+			int radius = 4;
+			canvas.drawCircle(ax, ay, radius, myPointPaint);
+			canvas.drawCircle(kx, ky, radius, myPointPaint);
+			canvas.drawCircle(hx, hy, radius, myPointPaint);
+			canvas.drawCircle(jx, jy, radius, myPointPaint);
+			canvas.drawCircle(cx, cy, radius, myPointPaint);
+			canvas.drawCircle(ex, ey, radius, myPointPaint);
+			canvas.drawCircle(bx, by, radius, myPointPaint);
+
+			canvas.drawCircle(kix, kiy, radius, myPointPaint);
+			canvas.drawCircle(ix, iy, radius, myPointPaint);
+
+			canvas.drawCircle(dbx, dby, radius, myPointPaint);
+			canvas.drawCircle(dx, dy, radius, myPointPaint);
+
+			canvas.drawCircle(sX, sY, radius, myPointPaint);
+			canvas.drawCircle(x1, y1, radius, myPointPaint);
+
+			canvas.drawCircle(dX, dY, radius, myPointPaint);
+
+			float textSize = myTextPaint.getTextSize();
+
+			canvas.drawText("a", ax - textSize, ay, myTextPaint);
+			canvas.drawText("k", kx - textSize, ky, myTextPaint);
+			canvas.drawText("h", hx - textSize, hy, myTextPaint);
+			canvas.drawText("j", jx - textSize, jy, myTextPaint);
+			canvas.drawText("c", cx - textSize, cy, myTextPaint);
+			canvas.drawText("e", ex - textSize, ey, myTextPaint);
+			canvas.drawText("b", bx - textSize, by, myTextPaint);
+
+			canvas.drawText("d", dx - textSize, dy, myTextPaint);
+			canvas.drawText("i", ix - textSize, iy, myTextPaint);
+
+			canvas.drawText("s", sX - textSize, sY, myTextPaint);
+			canvas.drawText("x", x1 - textSize, y1, myTextPaint);
+		}
+
+		Point dp = evaluate(new Point((int)cx, (int)cy), new Point((int)ex, (int)ey), new Point((int)bx, (int)by), 0.5f);
+		canvas.drawCircle(dp.x, dp.y, 4, myPointPaint);
+	}
+
+	private void drawInternalNoHack(Canvas canvas) {
+		drawBitmapTo(canvas, 0, 0, myPaint);
+		check(canvas);
+
+		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
+		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
+		final int oppositeX = Math.abs(myWidth - cornerX);
+		final int oppositeY = Math.abs(myHeight - cornerY);
+		final int x, y;
+		if (myDirection.IsHorizontal) {
+			x = myEndX;
+			if (getMode().Auto) {
+				y = myEndY;
+			} else {
+				if (cornerY == 0) {
+					y = Math.max(1, Math.min(myHeight / 2, myEndY));
+				} else {
+					y = Math.max(myHeight / 2, Math.min(myHeight - 1, myEndY));
+				}
+			}
+		} else {
+			y = myEndY;
+			if (getMode().Auto) {
+				x = myEndX;
+			} else {
+				if (cornerX == 0) {
+					x = Math.max(1, Math.min(myWidth / 2, myEndX));
+				} else {
+					x = Math.max(myWidth / 2, Math.min(myWidth - 1, myEndX));
+				}
+			}
+		}
 		final int dX = Math.max(1, Math.abs(x - cornerX));
 		final int dY = Math.max(1, Math.abs(y - cornerY));
 
@@ -353,6 +513,8 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		canvas.drawBitmap(getBitmapFrom(), m, myBackPaint);
 		canvas.restore();
 		*/
+
+		drawDebugInternalNoHack(canvas);
 	}
 
 	@Override
@@ -380,8 +542,28 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		doStep();
 	}
 
+	boolean mHScrolling = false;
+
 	@Override
 	protected void setupAnimatedScrollingStart(Integer x, Integer y) {
+		mHScrolling = false;
+		if(x > myWidth / 2){
+			int cel = myHeight / 3;
+			if(y > cel && y < 2 * cel){
+				if (myDirection.IsHorizontal) {
+					x = mySpeed < 0 ? myWidth - 1 : 1;
+					y = 1;
+				} else {
+					x = 1;
+					y = mySpeed < 0 ? myHeight - 1 : 1;
+				}
+				myEndX = myStartX = x;
+				myEndY = myStartY = y;
+				mHScrolling = true;
+				return;
+			}
+		}
+
 		if (x == null || y == null) {
 			if (myDirection.IsHorizontal) {
 				x = mySpeed < 0 ? myWidth - 3 : 3;
@@ -455,23 +637,33 @@ public final class CurlAnimationProvider extends AnimationProvider {
 			myEndX += speedX;
 			if (myEndX >= boundX) {
 				terminate();
+				mHScrolling = false;
 			}
 		} else {
 			myEndX -= speedX;
 			if (myEndX <= boundX) {
 				terminate();
+				mHScrolling = false;
 			}
 		}
 
 		if (ySpeedIsPositive) {
-			myEndY += speedY;
-			if (myEndY >= boundY) {
-				terminate();
+			if (mHScrolling) {
+				myEndY = cornerY;
+			}else{
+				myEndY += speedY;
+				if (myEndY >= boundY) {
+					terminate();
+				}
 			}
 		} else {
-			myEndY -= speedY;
-			if (myEndY <= boundY) {
-				terminate();
+			if (mHScrolling) {
+				myEndY = cornerY;
+			}else{
+				myEndY -= speedY;
+				if (myEndY <= boundY) {
+					terminate();
+				}
 			}
 		}
 	}
@@ -511,115 +703,5 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 	public int evaluate(int p0, int p1, int p2, float t){
 		return (int)((1-t) * (1-t) * p0 + 2 * t * (1-t) * p1 + t * t * p2);
-	}
-
-	public static boolean circleContains(float a, float b, float radius, float x, float y) {
-		x = a - x;
-		y = b - y;
-		return x * x + y * y <= radius * radius;
-	}
-
-	public static PointF circleCross(float a, float b, float r, float x, float y){
-		float x2 = x;
-		float y2 = y;
-
-		float C = x2 - a;
-		float D = y2 -b;
-
-		float R = r;
-
-		double cx1 = Math.pow(C*C*R*R/(C*C+D*D), 0.5);
-		double cy1 = Math.pow(D*D*R*R/(C*C+D*D), 0.5);
-
-		float p1x = (float)(cx1 + a);
-		float p1y = (float)(cy1 + b);
-		float p2x = (float)(-cx1 + a);
-		float p2y = (float)(-cy1 + b);
-
-		PointF point = new PointF();
-
-		final int quadrant = getQuadrant(a, b, x, y);
-		switch (quadrant){
-			case 1:
-				point.set(p1x, p1y);
-				break;
-			case 2:
-				point.set(p2x, p1y);
-				break;
-			case 3:
-				point.set(p2x, p2y);
-				break;
-			case 4:
-				point.set(p1x, p2y);
-				break;
-			default:
-				break;
-		}
-		return point;
-	}
-
-	private static int getQuadrant(float a, float b, float x, float y){
-		if(x >= a && y >=b){
-			return 1;
-		}else if(x <= a && y >=b){
-			return 2;
-		}else if(x <= a && y <=b){
-			return 3;
-		}else if(x >= a && y <=b){
-			return 4;
-		}
-		return 0;
-	}
-
-	public static float distance(float x1, float y1, float x2, float y2){
-		final float x = Math.abs(x1 - x2);
-		final float y = Math.abs(y1 - y2);
-		return (float)Math.sqrt(x * x + y * y);
-	}
-
-	/**
-	 * 计算C点的X值
-	 * @param a
-	 * @param corner
-	 * @return
-	 */
-	private float calcPointCX(Point a, Point corner){
-		int gx = (corner.x + a.x)/2;
-		int gy = (corner.y + a.y)/2;
-
-		int hx = corner.x;
-		int hy = gy - (corner.x-gx) * (corner.x-gx) / (corner.y-gy);
-
-		int ex = gx - (corner.y-gy) * (corner.y-gy) / (corner.x-gx);
-		int ey = corner.y;
-
-		float bx = a.x + 3/4f * (ex - a.x);
-		float by = a.y + 3/4f * (corner.y - a.y);
-		float cx = a.x + (ex - a.x) - 1/4f * (corner.x - ex);
-		float cy = corner.y;
-
-		return cx;
-	}
-
-	private float calcPoints(Point a, Point corner){
-
-		int gx = (corner.x + a.x)/2;
-		int gy = (corner.y + a.y)/2;
-
-		int hx = corner.x;
-		int hy = gy - (corner.x-gx) * (corner.x-gx) / (corner.y-gy);
-
-		int ex = gx - (corner.y-gy) * (corner.y-gy) / (corner.x-gx);
-		int ey = corner.y;
-
-		float bx = a.x + 3/4f * (ex - a.x);
-		float by = a.y + 3/4f * (corner.y - a.y);
-		float cx = a.x + (ex - a.x) - 1/4f * (corner.x - ex);
-		float cy = corner.y;
-
-		float l = distance(ex, ey, bx, by);
-		float h = Math.abs(corner.y - by);
-
-		return l * h / 2;
 	}
 }
