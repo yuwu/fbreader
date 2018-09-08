@@ -167,7 +167,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 		int gx = (cornerX + ax)/2;
 		int gy = (cornerY + ay)/2;
-00
+
 		int hx = cornerX;
 		int hy = gy - (cornerX-gx) * (cornerX-gx) / (cornerY-gy);
 
