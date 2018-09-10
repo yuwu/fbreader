@@ -27,9 +27,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.RectF;
-import android.graphics.Region;
-import android.util.Log;
 
 import org.geometerplus.zlibrary.core.util.BitmapUtil;
 import org.geometerplus.zlibrary.core.view.ZLViewEnums;
@@ -134,35 +131,27 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 	private void drawDebugInternalNoHack(Canvas canvas){
 		drawBitmapTo(canvas, 0, 0, myPaint);
+
 		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
 		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
-		final int oppositeX = Math.abs(myWidth - cornerX);
+		int oppositeX = Math.abs(myWidth - cornerX);
 		final int oppositeY = Math.abs(myHeight - cornerY);
-
-		//Log.d("DEBUG", " myStartX:" + myStartX + " myStartY:" + myStartY + " endX:" + myEndX + " endY:" + myEndY);
 
 		int ax = myEndX;
 		int ay = myEndY;
-
 		if (cornerY == 0) {
 			ay = Math.max(1, ay);
 		} else {
 			ay = Math.min(myHeight - 1, ay);
 		}
 
-		// check
-		{
-			float r = myWidth;
-			boolean contains = circleContains(oppositeX, cornerY, r, ax, ay);
-			if(!contains){
-				PointF point = circleCross(oppositeX, cornerY, r, ax, ay);
-				ax = (int)point.x;
-				ay = (int)point.y;
-			}
-			ay = (int)Math.max(ay, myHeight - myWidth * 3 / 4f);
-
-			float s = calcPoints(new Point(ax, ay), new Point(cornerX, cornerY));
-			Log.d("DEBUG", " s:" + s + " max:" + (myWidth * 1 / 4f * myWidth * 1 / 4f / 2));
+		float circleX = oppositeX == 0 ? myWidth * 1/5f : oppositeX-myWidth *1/5f;
+		float r = myWidth * 4/5f;
+		boolean contains = circleContains(circleX, cornerY, r, myEndX, myEndY);
+		if(!contains){
+			PointF point = circleCross(circleX, cornerY, r, myEndX, myEndY);
+			ax = (int)point.x;
+			ay = (int)point.y;
 		}
 
 		int gx = (cornerX + ax)/2;
@@ -191,6 +180,8 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		path.quadTo(ex, ey, bx, by);
 		canvas.drawPath(path, paint);
 
+		canvas.drawCircle(cornerX, cornerY, r, paint);
+
 		canvas.drawCircle(oppositeX, cornerY, myWidth, paint);
 
 		canvas.drawCircle(cx, cy, 4, paint);
@@ -208,6 +199,16 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
 		final int oppositeX = Math.abs(myWidth - cornerX);
 		final int oppositeY = Math.abs(myHeight - cornerY);
+
+		float circleX = oppositeX == 0 ? myWidth * 1/3f : oppositeX-myWidth * 1/3f;
+		float r = myWidth * 2/3f;
+		boolean contains = circleContains(circleX, cornerY, r, myEndX, myEndY);
+		if(!contains){
+			PointF point = circleCross(circleX, cornerY, r, myEndX, myEndY);
+			myEndX = (int)point.x;
+			myEndY = (int)point.y;
+		}
+
 		int x, y;
 		if (myDirection.IsHorizontal) {
 			x = myEndX;
@@ -231,13 +232,6 @@ public final class CurlAnimationProvider extends AnimationProvider {
 					x = Math.max(myWidth / 2, Math.min(myWidth - 1, myEndX));
 				}
 			}
-		}
-
-		boolean contains = circleContains(oppositeX, cornerY, myWidth, x, y);
-		if(!contains){
-			PointF point = circleCross(oppositeX, cornerY, myWidth, x, y);
-			x = (int)point.x;
-			y = (int)point.y;
 		}
 
 		final int dX = Math.max(1, Math.abs(x - cornerX));
@@ -337,22 +331,6 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		m.postRotate(angle, x, y);
 		canvas.drawBitmap(getBitmapFrom(), m, myBackPaint);
 		canvas.restore();
-		/*
-		canvas.save();
-		canvas.clipPath(myEdgePath);
-		final Matrix m = new Matrix();
-		m.postScale(1, -1);
-		m.postTranslate(x - cornerX, y + cornerY);
-		final float angle;
-		if (cornerY == 0) {
-			angle = -180 / 3.1416f * (float)Math.atan2(x - cornerX, y - y1);
-		} else {
-			angle = 180 - 180 / 3.1416f * (float)Math.atan2(x - cornerX, y - y1);
-		}
-		m.postRotate(angle, x, y);
-		canvas.drawBitmap(getBitmapFrom(), m, myBackPaint);
-		canvas.restore();
-		*/
 	}
 
 	@Override
@@ -516,7 +494,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 	public static boolean circleContains(float a, float b, float radius, float x, float y) {
 		x = a - x;
 		y = b - y;
-		return x * x + y * y <= radius * radius;
+		return x * x + y * y < radius * radius;
 	}
 
 	public static PointF circleCross(float a, float b, float r, float x, float y){
