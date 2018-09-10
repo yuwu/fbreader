@@ -29,15 +29,15 @@ android {
 		versionName "1.0"
 	}
 
-	task ndkBuild(type: Exec) {
-		//def ndkDir = plugins.getPlugin('com.android.library').sdkHandler.getNdkFolder()
-		def ndkDir = project.android.ndkDirectory
-		commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
-	}
-
-	tasks.withType(JavaCompile) {
-		compileTask -> compileTask.dependsOn ndkBuild
-	}
+//	task ndkBuild(type: Exec) {
+//		//def ndkDir = plugins.getPlugin('com.android.library').sdkHandler.getNdkFolder()
+//		def ndkDir = project.android.ndkDirectory
+//		commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
+//	}
+//
+//	tasks.withType(JavaCompile) {
+//		compileTask -> compileTask.dependsOn ndkBuild
+//	}
 
 	clean {
 		delete 'src/main/obj'

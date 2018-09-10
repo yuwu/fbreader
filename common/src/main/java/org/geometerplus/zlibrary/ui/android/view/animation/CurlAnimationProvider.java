@@ -180,8 +180,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		path.quadTo(ex, ey, bx, by);
 		canvas.drawPath(path, paint);
 
-		canvas.drawCircle(cornerX, cornerY, r, paint);
-
+		canvas.drawCircle(circleX, cornerY, r, paint);
 		canvas.drawCircle(oppositeX, cornerY, myWidth, paint);
 
 		canvas.drawCircle(cx, cy, 4, paint);
