@@ -19,6 +19,7 @@
 
 package org.geometerplus.zlibrary.ui.android.view.animation;
 
+import org.geometerplus.fbreader.fbreader.TapZoneMap;
 import org.geometerplus.zlibrary.core.view.ZLViewEnums;
 
 abstract class SimpleAnimationProvider extends AnimationProvider {
@@ -26,25 +27,6 @@ abstract class SimpleAnimationProvider extends AnimationProvider {
 
 	SimpleAnimationProvider(BitmapManager bitmapManager) {
 		super(bitmapManager);
-	}
-
-	@Override
-	public ZLViewEnums.PageIndex getPageToScrollTo(int x, int y) {
-		if (myDirection == null) {
-			return ZLViewEnums.PageIndex.current;
-		}
-
-		switch (myDirection) {
-			case rightToLeft:
-				return myStartX < x ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
-			case leftToRight:
-				return myStartX < x ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
-			case up:
-				return myStartY < y ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
-			case down:
-				return myStartY < y ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
-		}
-		return ZLViewEnums.PageIndex.current;
 	}
 
 	@Override

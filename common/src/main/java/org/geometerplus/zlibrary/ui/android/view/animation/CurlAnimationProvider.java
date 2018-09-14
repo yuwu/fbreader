@@ -27,8 +27,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
@@ -105,13 +103,13 @@ public final class CurlAnimationProvider extends AnimationProvider {
 			final Canvas softCanvas = new Canvas(myBuffer);
 //			drawInternalNoHack(softCanvas);
 //			drawInternalNoHack2(softCanvas);
-			drawInternalNoHack3(softCanvas);
+			drawInternalPage(softCanvas);
 			canvas.drawBitmap(myBuffer, 0, 0, myPaint);
 		} else {
 			try {
 //				drawInternalNoHack(canvas);
 //				drawInternalNoHack2(canvas);
-				drawInternalNoHack3(canvas);
+				drawInternalPage(canvas);
 			} catch (UnsupportedOperationException e) {
 				myUseCanvasHack = true;
 				drawInternal(canvas);
@@ -122,10 +120,6 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 	@Override
 	public void scrollTo(int x, int y) {
-		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
-		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
-		final int oppositeX = Math.abs(myWidth - cornerX);
-		final int oppositeY = Math.abs(myHeight - cornerY);
 		super.scrollTo(x, y);
 	}
 
@@ -168,15 +162,34 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		canvas.drawRect(bottom, myLinePaint);
 	}
 
-	private void drawInternalNoHack3(Canvas canvas){
-		drawBitmapTo(canvas, 0, 0, myPaint);
-		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
+	private void drawInternalPage(Canvas canvas){
+		final ZLViewEnums.PageIndex pageIndex = getPageToScrollTo();
+		if(pageIndex == ZLViewEnums.PageIndex.previous){
+			drawInternalPrevious(canvas);
+		}else if(pageIndex == ZLViewEnums.PageIndex.next){
+			drawInternalNext(canvas);
+		}else{
+			drawBitmapTo(canvas, 0, 0, myPaint);
+		}
+	}
+
+	private void drawInternalPrevious(Canvas canvas){
+		drawBitmapFrom(canvas, 0, 0, myPaint);
+
+		final int cornerX = myWidth;
 		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
+
 		int oppositeX = Math.abs(myWidth - cornerX);
 		final int oppositeY = Math.abs(myHeight - cornerY);
 
-		int ox = myEndX;
-		int oy = myEndY;
+		float offsetX = myEndX - myStartX;
+		float offsetY = myEndY - myStartY;
+
+		float ox = offsetX;
+		float oy = cornerY + offsetY;
+
+//		int ox = myEndX;
+//		int oy = myEndY;
 		if (cornerY == 0) {
 			oy = Math.max(1, oy);
 		} else {
@@ -185,22 +198,149 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 		float circleX = oppositeX == 0 ? myWidth * 1/5f : oppositeX-myWidth *1/5f;
 		float r = myWidth * 4/5f;
-		boolean contains = circleContains(circleX, cornerY, r, myEndX, myEndY);
+		boolean contains = circleContains(circleX, cornerY, r, ox, oy);
 		if(!contains){
-			PointF point = circleCross(circleX, cornerY, r, myEndX, myEndY);
+			PointF point = circleCross(circleX, cornerY, r, ox, oy);
 			ox = (int)point.x;
 			oy = (int)point.y;
 		}
 
 		// 向量线段中点计算公式
-		int opx = (cornerX + ox)/2;
-		int opy = (cornerY + oy)/2;
+		float opx = (cornerX + ox)/2;
+		float opy = (cornerY + oy)/2;
 
-		int ax = opx - (cornerY-opy) * (cornerY-opy) / (cornerX-opx);
-		int ay = cornerY;
+		float ax = opx - (cornerY-opy) * (cornerY-opy) / (cornerX-opx);
+		float ay = cornerY;
 
-		int bx = cornerX;
-		int by = opy - (cornerX-opx) * (cornerX-opx) / (cornerY-opy);
+		float bx = cornerX;
+		float by = opy - (cornerX-opx) * (cornerX-opx) / (cornerY-opy);
+
+		// 向量线段定比分点计算公式 OF = 3/4FA
+		float fx = (ox + 3 * ax) / 4;
+		float fy = (oy + 3 * ay) / 4;
+
+		// 向量线段定比分点计算公式 OD = 3/4DB
+		float dx = (ox + 3 * bx) / 4;
+		float dy = (oy + 3 * by) / 4;
+
+		// 因为AF=AG, AF=1/4AO, AO=AP=(cornerX - ax),
+		// 所以AG=1/4(cornerX - ax)
+		float gx = ax - 1/4f * (cornerX - ax);
+		float gy = cornerY;
+
+		float cx = cornerX;
+		float cy = by - 1/4f * (cornerY - by);
+
+		float ix = bezier2(gx, ax, fx, 0.5f);
+		float iy = bezier2(gy, ay, fy, 0.5f);
+
+		float jx = bezier2(dx, bx, cx, 0.5f);
+		float jy = bezier2(dy, by, cy, 0.5f);
+
+		{
+			myQuadPath.moveTo(gx, gy);
+			myQuadPath.quadTo(ax, ay, fx, fy);
+			canvas.drawPath(myQuadPath, myEdgePaint);
+			myQuadPath.rewind();
+			myQuadPath.moveTo(dx, dy);
+			myQuadPath.quadTo(bx, by, cx, cy);
+			canvas.drawPath(myQuadPath, myEdgePaint);
+			myQuadPath.rewind();
+		}
+
+		{
+			myFgPath.rewind();
+			myFgPath.moveTo(ox, oy);
+			myFgPath.lineTo(dx, dy);
+			myFgPath.quadTo(bx, by, cx, cy);
+
+			myFgPath.lineTo(cornerX, oppositeY);
+			myFgPath.lineTo(oppositeX, oppositeY);
+			myFgPath.lineTo(oppositeX, cornerY);
+
+			myFgPath.lineTo(gx, gy);
+			myFgPath.quadTo(ax, ay, fx, fy);
+			myFgPath.lineTo(ax, ay);
+
+			canvas.save();
+			canvas.clipPath(myFgPath);
+			drawBitmapTo(canvas, 0, 0, myPaint);
+			canvas.restore();
+		}
+
+		{
+			myEdgePaint.setColor(ZLAndroidColorUtil.rgb(ZLAndroidColorUtil.getAverageColor(getBitmapFrom())));
+			myEdgePath.reset();
+			myEdgePath.moveTo(ix, iy);
+			myEdgePath.quadTo((fx+ax)/2, (fy+ay)/2, fx, fy);
+			myEdgePath.lineTo(ox, oy);
+			myEdgePath.lineTo(dx, dy);
+			myEdgePath.quadTo((dx+bx)/2, (dy+by)/2, jx, jy);
+			canvas.drawPath(myEdgePath, myEdgePaint);
+
+			canvas.save();
+			canvas.clipPath(myEdgePath);
+			final Matrix m = new Matrix();
+			m.postScale(1, -1);
+			m.postTranslate(ox - cornerX, oy + cornerY);
+			final float angle;
+			if (cornerY == 0) {
+				angle = -180 / 3.1416f * (float)Math.atan2(ox - cornerX, oy - (dy+by)/2);
+			} else {
+				angle = 180 - 180 / 3.1416f * (float)Math.atan2(ox - cornerX, oy - (dy+by)/2);
+			}
+			m.postRotate(angle, ox, oy);
+			canvas.drawBitmap(getBitmapTo(), m, myBackPaint);
+			canvas.restore();
+		}
+	}
+
+	private void drawInternalNext(Canvas canvas){
+		final ZLViewEnums.PageIndex pageIndex = getPageToScrollTo();
+
+		drawBitmapTo(canvas, 0, 0, myPaint);
+
+//		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
+//		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
+
+		final int cornerX = myWidth;
+		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
+
+		int oppositeX = Math.abs(myWidth - cornerX);
+		final int oppositeY = Math.abs(myHeight - cornerY);
+
+		float offsetX = myEndX - myStartX;
+		float offsetY = myEndY - myStartY;
+
+		float ox = cornerX + offsetX;
+		float oy = cornerY + offsetY;
+
+//		int ox = myEndX;
+//		int oy = myEndY;
+		if (cornerY == 0) {
+			oy = Math.max(1, oy);
+		} else {
+			oy = Math.min(myHeight - 1, oy);
+		}
+
+		float circleX = oppositeX == 0 ? myWidth * 1/5f : oppositeX-myWidth *1/5f;
+		float r = myWidth * 4/5f;
+		boolean contains = circleContains(circleX, cornerY, r, ox, oy);
+		if(!contains){
+			PointF point = circleCross(circleX, cornerY, r, ox, oy);
+			ox = (int)point.x;
+			oy = (int)point.y;
+		}
+
+		// 向量线段中点计算公式
+		float opx = (cornerX + ox)/2;
+		float opy = (cornerY + oy)/2;
+
+		float ax = opx - (cornerY-opy) * (cornerY-opy) / (cornerX-opx);
+		float ay = cornerY;
+
+		float bx = cornerX;
+		float by = opy - (cornerX-opx) * (cornerX-opx) / (cornerY-opy);
 
 		// 向量线段定比分点计算公式 OF = 3/4FA
 		float fx = (ox + 3 * ax) / 4;
@@ -559,20 +699,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 
 	@Override
 	public ZLViewEnums.PageIndex getPageToScrollTo(int x, int y) {
-		if (myDirection == null) {
-			return ZLViewEnums.PageIndex.current;
-		}
-		switch (myDirection) {
-			case leftToRight:
-				return myStartX < myWidth / 2 ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
-			case rightToLeft:
-				return myStartX < myWidth / 2 ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
-			case up:
-				return myStartY < myHeight / 2 ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
-			case down:
-				return myStartY < myHeight / 2 ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
-		}
-		return ZLViewEnums.PageIndex.current;
+		return super.getPageToScrollTo(x, y);
 	}
 
 	@Override
@@ -593,17 +720,17 @@ public final class CurlAnimationProvider extends AnimationProvider {
 				y = mySpeed < 0 ? myHeight - 3 : 3;
 			}
 		} else {
-			final int cornerX = x > myWidth / 2 ? myWidth : 0;
-			final int cornerY = y > myHeight / 2 ? myHeight : 0;
-			int deltaX = Math.min(Math.abs(x - cornerX), myWidth / 5);
-			int deltaY = Math.min(Math.abs(y - cornerY), myHeight / 5);
-			if (myDirection.IsHorizontal) {
-				deltaY = Math.min(deltaY, deltaX / 3);
-			} else {
-				deltaX = Math.min(deltaX, deltaY / 3);
-			}
-			x = Math.abs(cornerX - deltaX);
-			y = Math.abs(cornerY - deltaY);
+//			final int cornerX = x > myWidth / 2 ? myWidth : 0;
+//			final int cornerY = y > myHeight / 2 ? myHeight : 0;
+//			int deltaX = Math.min(Math.abs(x - cornerX), myWidth / 5);
+//			int deltaY = Math.min(Math.abs(y - cornerY), myHeight / 5);
+//			if (myDirection.IsHorizontal) {
+//				deltaY = Math.min(deltaY, deltaX / 3);
+//			} else {
+//				deltaX = Math.min(deltaX, deltaY / 3);
+//			}
+//			x = Math.abs(cornerX - deltaX);
+//			y = Math.abs(cornerY - deltaY);
 		}
 		myEndX = myStartX = x;
 		myEndY = myStartY = y;
@@ -618,7 +745,10 @@ public final class CurlAnimationProvider extends AnimationProvider {
 		final int speed = (int)Math.abs(mySpeed);
 		mySpeed *= mySpeedFactor;
 
-		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
+//		final int cornerX = myStartX > myWidth / 2 ? myWidth : 0;
+//		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
+
+		final int cornerX = myWidth;
 		final int cornerY = myStartY > myHeight / 2 ? myHeight : 0;
 
 		final int boundX, boundY;
@@ -750,24 +880,21 @@ public final class CurlAnimationProvider extends AnimationProvider {
 	 * @return
 	 */
 	public static PointF circleCross(float a, float b, float r, float x, float y){
-		float x2 = x;
-		float y2 = y;
 
-		float C = x2 - a;
-		float D = y2 -b;
+		float C = x - a;
+		float D = y - b;
 
 		float R = r;
 
-		double cx1 = Math.pow(C*C*R*R/(C*C+D*D), 0.5f);
-		double cy1 = Math.pow(D*D*R*R/(C*C+D*D), 0.5f);
+		float cx1 = (float)Math.pow(C*C*R*R/(C*C+D*D), 0.5f);
+		float cy1 = (float)Math.pow(D*D*R*R/(C*C+D*D), 0.5f);
 
-		float p1x = (float)(cx1 + a);
-		float p1y = (float)(cy1 + b);
-		float p2x = (float)(-cx1 + a);
-		float p2y = (float)(-cy1 + b);
+		float p1x = cx1 + a;
+		float p1y = cy1 + b;
+		float p2x = -cx1 + a;
+		float p2y = -cy1 + b;
 
 		PointF point = new PointF();
-
 		final int quadrant = getQuadrant(a, b, x, y);
 		switch (quadrant){
 			case 1:

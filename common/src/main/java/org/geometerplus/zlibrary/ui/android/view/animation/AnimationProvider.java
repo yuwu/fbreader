@@ -24,6 +24,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.Log;
 
+import org.geometerplus.fbreader.fbreader.TapZoneMap;
 import org.geometerplus.zlibrary.core.library.ZLibrary;
 import org.geometerplus.zlibrary.core.view.ZLViewEnums;
 
@@ -71,6 +72,7 @@ public abstract class AnimationProvider {
 		myMode = Mode.NoScrolling;
 		mySpeed = 0;
 		myDrawInfos.clear();
+		Log.d("LOG", "terminate");
 	}
 
 	public void startManualScrolling(int x, int y) {
@@ -260,10 +262,48 @@ public abstract class AnimationProvider {
 	protected abstract void drawInternal(Canvas canvas);
 	protected abstract void drawFooterBitmapInternal(Canvas canvas, Bitmap footerBitmap, int voffset);
 
-	public abstract ZLViewEnums.PageIndex getPageToScrollTo(int x, int y);
+	public ZLViewEnums.PageIndex getPageToScrollTo(int x, int y) {
+		if (myDirection == null) {
+			return ZLViewEnums.PageIndex.current;
+		}
+//		switch (myDirection) {
+//			case rightToLeft:
+//				return myStartX < x ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
+//			case leftToRight:
+//				return myStartX < x ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
+//			case up:
+//				return myStartY < y ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
+//			case down:
+//				return myStartY < y ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
+//		}
+		final TapZoneMap tapZoneMap;
+		switch (myDirection) {
+			case leftToRight:
+				tapZoneMap = TapZoneMap.zoneMap("left_to_right");
+				break;
+			case up:
+				tapZoneMap = TapZoneMap.zoneMap("up");
+				break;
+			case down:
+				tapZoneMap = TapZoneMap.zoneMap("down");
+				break;
+			case rightToLeft:
+			default:
+				tapZoneMap = TapZoneMap.zoneMap("right_to_left");
+				break;
+		}
+
+		final String action = tapZoneMap.getActionByCoordinates(x, y, myWidth, myHeight, TapZoneMap.Tap.singleTap);
+		if("previousPage".equals(action)){
+			return ZLViewEnums.PageIndex.previous;
+		}else if("nextPage".equals(action)){
+			return ZLViewEnums.PageIndex.next;
+		}
+		return ZLViewEnums.PageIndex.current;
+	}
 
 	public final ZLViewEnums.PageIndex getPageToScrollTo() {
-		return getPageToScrollTo(myEndX, myEndY);
+		return getPageToScrollTo(myStartX, myStartY);
 	}
 
 	protected Bitmap getBitmapFrom() {
