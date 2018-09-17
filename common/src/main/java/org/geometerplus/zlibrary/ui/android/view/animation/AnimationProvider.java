@@ -32,11 +32,25 @@ import java.util.LinkedList;
 import java.util.List;
 
 public abstract class AnimationProvider {
+
+	/**
+	 * 动画效果
+	 */
 	public static enum Mode {
 		NoScrolling(false),
 		PreManualScrolling(false),
+
+		/**
+		 * 手指拖动
+		 */
 		ManualScrolling(false),
+		/**
+		 * 下一页动画效果
+		 */
 		AnimatedScrollingForward(true),
+		/**
+		 * 上一页动画效果
+		 */
 		AnimatedScrollingBackward(true);
 
 		public final boolean Auto;
@@ -72,7 +86,6 @@ public abstract class AnimationProvider {
 		myMode = Mode.NoScrolling;
 		mySpeed = 0;
 		myDrawInfos.clear();
-		Log.d("LOG", "terminate");
 	}
 
 	public void startManualScrolling(int x, int y) {
@@ -180,7 +193,9 @@ public abstract class AnimationProvider {
 			return;
 		}
 		terminate();
-		myMode = Mode.AnimatedScrollingForward;
+
+		boolean forward = pageIndex == ZLViewEnums.PageIndex.next;
+		myMode = forward ? Mode.AnimatedScrollingForward : Mode.AnimatedScrollingBackward;
 
 		switch (myDirection) {
 			case up:

@@ -157,18 +157,19 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 		} else {
 			switch (oldMode) {
 				case AnimatedScrollingForward:
+				case AnimatedScrollingBackward:
 				{
 					final ZLView.PageIndex index = animator.getPageToScrollTo();
 					myBitmapManager.shift(index == ZLView.PageIndex.next);
 					view.onScrollingFinished(index);
+					onDrawStatic(canvas);
 					ZLApplication.Instance().onRepaintFinished();
 					break;
 				}
-				case AnimatedScrollingBackward:
-					view.onScrollingFinished(ZLView.PageIndex.current);
+				default:
+					onDrawStatic(canvas);
 					break;
 			}
-			onDrawStatic(canvas);
 		}
 	}
 
@@ -321,7 +322,10 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 							),
 							view.isScrollbarShown() ? getVerticalScrollbarWidth() : 0
 						);
-						view.preparePage(context, ZLView.PageIndex.next);
+						//view.preparePage(context, ZLView.PageIndex.next);
+						final AnimationProvider animator = getAnimationProvider();
+						final ZLView.PageIndex pageIndex = animator.getPageToScrollTo();
+						view.preparePage(context, pageIndex);
 					}
 				});
 			}
