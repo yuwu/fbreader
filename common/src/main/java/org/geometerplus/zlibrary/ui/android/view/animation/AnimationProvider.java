@@ -22,7 +22,6 @@ package org.geometerplus.zlibrary.ui.android.view.animation;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.util.Log;
 
 import org.geometerplus.fbreader.fbreader.TapZoneMap;
 import org.geometerplus.zlibrary.core.library.ZLibrary;
@@ -86,6 +85,8 @@ public abstract class AnimationProvider {
 		myMode = Mode.NoScrolling;
 		mySpeed = 0;
 		myDrawInfos.clear();
+		scrollToX = 0;
+		scrollToXDirection = 0;
 	}
 
 	public void startManualScrolling(int x, int y) {
@@ -115,7 +116,17 @@ public abstract class AnimationProvider {
 		return Mode.PreManualScrolling;
 	}
 
-	public void scrollTo(int x, int y) {
+	private float scrollToX = 0;
+	protected float scrollToXDirection = 0;
+	public final void scrollTo(int x, int y) {
+		if(scrollToX == 0){
+			scrollToX = myStartX;
+		}
+		if(Math.abs(x - scrollToX) >= 50){
+			scrollToXDirection = x-scrollToX;
+			scrollToX = x;
+		}
+
 		switch (myMode) {
 			case ManualScrolling:
 				myEndX = x;
@@ -134,15 +145,15 @@ public abstract class AnimationProvider {
 			return;
 		}
 
-		if (getPageToScrollTo(x, y) == ZLViewEnums.PageIndex.current) {
-			return;
-		}
+//		if (getPageToScrollTo(x, y) == ZLViewEnums.PageIndex.current) {
+//			return;
+//		}
 
 		final int dpi = ZLibrary.Instance().getDisplayDPI();
 		final int diff = myDirection.IsHorizontal ? x - myStartX : y - myStartY;
 		final int minDiff = myDirection.IsHorizontal
-			? (myWidth > myHeight ? myWidth / 4 : myWidth / 3)
-			: (myHeight > myWidth ? myHeight / 4 : myHeight / 3);
+				? (myWidth > myHeight ? myWidth / 4 : myWidth / 3)
+				: (myHeight > myWidth ? myHeight / 4 : myHeight / 3);
 		boolean forward = Math.abs(diff) > Math.min(minDiff, dpi / 2);
 
 		myMode = forward ? Mode.AnimatedScrollingForward : Mode.AnimatedScrollingBackward;
@@ -281,16 +292,6 @@ public abstract class AnimationProvider {
 		if (myDirection == null) {
 			return ZLViewEnums.PageIndex.current;
 		}
-//		switch (myDirection) {
-//			case rightToLeft:
-//				return myStartX < x ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
-//			case leftToRight:
-//				return myStartX < x ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
-//			case up:
-//				return myStartY < y ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
-//			case down:
-//				return myStartY < y ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
-//		}
 		final TapZoneMap tapZoneMap;
 		switch (myDirection) {
 			case leftToRight:
@@ -314,6 +315,16 @@ public abstract class AnimationProvider {
 		}else if("nextPage".equals(action)){
 			return ZLViewEnums.PageIndex.next;
 		}
+//		switch (myDirection) {
+//			case rightToLeft:
+//				return myStartX < x ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
+//			case leftToRight:
+//				return myStartX < x ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
+//			case up:
+//				return myStartY < y ? ZLViewEnums.PageIndex.previous : ZLViewEnums.PageIndex.next;
+//			case down:
+//				return myStartY < y ? ZLViewEnums.PageIndex.next : ZLViewEnums.PageIndex.previous;
+//		}
 		return ZLViewEnums.PageIndex.current;
 	}
 

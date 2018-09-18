@@ -36,6 +36,7 @@ import org.geometerplus.zlibrary.core.application.ZLApplication;
 import org.geometerplus.zlibrary.core.application.ZLKeyBindings;
 import org.geometerplus.zlibrary.core.util.SystemInfo;
 import org.geometerplus.zlibrary.core.view.ZLView;
+import org.geometerplus.zlibrary.core.view.ZLViewEnums;
 import org.geometerplus.zlibrary.core.view.ZLViewWidget;
 import org.geometerplus.zlibrary.text.view.ZLTextView;
 import org.geometerplus.zlibrary.ui.android.view.animation.AnimationProvider;
@@ -160,7 +161,9 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 				case AnimatedScrollingBackward:
 				{
 					final ZLView.PageIndex index = animator.getPageToScrollTo();
-					myBitmapManager.shift(index == ZLView.PageIndex.next);
+					if(index != ZLView.PageIndex.current){
+						myBitmapManager.shift(index == ZLView.PageIndex.next);
+					}
 					view.onScrollingFinished(index);
 					onDrawStatic(canvas);
 					ZLApplication.Instance().onRepaintFinished();
@@ -371,6 +374,7 @@ public class ZLAndroidWidget extends MainView implements ZLViewWidget, View.OnLo
 			myPendingShortClickRunnable = null;
 		}
 	}
+
 	private volatile ShortClickRunnable myPendingShortClickRunnable;
 
 	private volatile boolean myPendingPress;

@@ -111,12 +111,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 				drawInternal(canvas);
 			}
 		}
-		drawDebugClickArea(canvas);
-	}
-
-	@Override
-	public void scrollTo(int x, int y) {
-		super.scrollTo(x, y);
+		//drawDebugClickArea(canvas);
 	}
 
 	private void drawDebugClickArea(Canvas canvas){
@@ -299,11 +294,6 @@ public final class CurlAnimationProvider extends AnimationProvider {
 	}
 
 	@Override
-	public ZLViewEnums.PageIndex getPageToScrollTo(int x, int y) {
-		return super.getPageToScrollTo(x, y);
-	}
-
-	@Override
 	protected void startAnimatedScrollingInternal(int speed) {
 		mySpeedFactor = (float)Math.pow(2.0, 0.25 * speed);
 		mySpeed *= 1.5;
@@ -403,7 +393,7 @@ public final class CurlAnimationProvider extends AnimationProvider {
 	}
 
 	/**
-	 * 已知起始点，终点，t时间上一点，求控制点
+	 * 已知起始点，t时间上一点，终点，求控制点
 	 * @param p0 起始点
 	 * @param pt  t时间上一点
 	 * @param p2 终点
